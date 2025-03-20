@@ -75,3 +75,61 @@ def plot_data(X_train, X_test, test_ground_truth):
     ax3.set_title("What detection should ideally look like")
     ax3.legend()
     plt.show()
+
+
+def plot_results(model, X_test, y_pred, 
+                 x_min=-1.2, x_max=2.2, 
+                 y_min=-0.7, y_max=1.2):
+    """
+    Plot the final detection results of a trained One-Class SVM.
+
+    Parameters
+    ----------
+    model : object
+        A trained model that implements the .decision_function() method, 
+        e.g. One-Class SVM or other anomaly detection estimators.
+    X_test : ndarray of shape (n_samples, 2)
+        The test dataset.
+    y_pred : ndarray of shape (n_samples,)
+        Predicted labels for the test set (1 for inliers, -1 for outliers).
+    x_min, x_max : float
+        The minimum and maximum x-values for the plot's axis and contour.
+    y_min, y_max : float
+        The minimum and maximum y-values for the plot's axis and contour.
+    """
+    
+    # Create a meshgrid for contour plotting
+    xx, yy = np.meshgrid(
+        np.linspace(x_min, x_max, 200),
+        np.linspace(y_min, y_max, 200)
+    )
+    grid = np.c_[xx.ravel(), yy.ravel()]
+
+    # Compute the decision function for each point in the grid
+    Z = model.decision_function(grid)
+    Z = Z.reshape(xx.shape)
+
+    # Plot the decision function using contour
+    plt.figure(figsize=(6, 5))
+    plt.contourf(xx, yy, Z, levels=np.linspace(Z.min(), Z.max(), 50),
+                 cmap=plt.cm.RdBu_r, alpha=0.6)
+
+    # Plot the test data points
+    plt.scatter(X_test[y_pred == 1, 0], X_test[y_pred == 1, 1],
+                c='blue', s=5, label='Okay Data')
+    plt.scatter(X_test[y_pred != 1, 0], X_test[y_pred != 1, 1],
+                c='red', s=5, label='Not Okay Data')
+
+    # Set the axis limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+
+    # Set titles and labels
+    plt.title("One-Class SVM Anomaly Detection")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.legend()
+    plt.grid(True)
+
+    # Show the plot
+    plt.show()
